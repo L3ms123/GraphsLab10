@@ -1,0 +1,13 @@
+name: agx_biolab_alt
+channels:
+  - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+  - https://repo.anaconda.com/pkgs/msys2
+dependencies:
+  - python=3.12
+  - networkx=3.4.2
+  - biopython=1.78
+  - spyder=6.0.3
+  - matplotlib=3.10.0
+  - scipy=1.15.2
