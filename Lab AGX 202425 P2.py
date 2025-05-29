@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from collections import defaultdict, Counter
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -9,9 +7,30 @@ from scipy import stats
 from itertools import combinations
 
 # ------- IMPLEMENT HERE ANY AUXILIARY FUNCTIONS NEEDED ------- #
-
+def plot_degree_distribution(degree_freq_list, title_prefix="Degree Distribution"):
+    degrees = np.arange(len(degree_freq_list))
+    freqs = np.array(degree_freq_list)
+    
+    # Linear scale plot
+    plt.figure(figsize=(12,5))
+    plt.subplot(1,2,1)
+    plt.bar(degrees, freqs, color='skyblue')
+    plt.title(f"{title_prefix} (Linear scale)")
+    plt.xlabel("Degree")
+    plt.ylabel("Frequency")
+    
+    # Log-log scale plot (avoid zero frequencies)
+    nonzero = freqs > 0
+    plt.subplot(1,2,2)
+    plt.scatter(degrees[nonzero], freqs[nonzero], color='red')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.title(f"{title_prefix} (Log-Log scale)")
+    plt.xlabel("Degree (log scale)")
+    plt.ylabel("Frequency (log scale)")
+    plt.tight_layout()
+    plt.show()
 # --------------- END OF AUXILIARY FUNCTIONS ------------------ #
-
 
 def degree_distribution(G : nx.DiGraph, degree_type : str, \
                         node_type : str, bestN : int) -> tuple:
@@ -49,7 +68,6 @@ def degree_distribution(G : nx.DiGraph, degree_type : str, \
     elif degree_type=='out':  degrees = G.out_degree(nodes_to_consider)
     elif degree_type=='general':  degrees = G.degree(nodes_to_consider)
 
-
     degree_dict = dict(degrees)
 
     # Degree frequency distribution
@@ -59,7 +77,6 @@ def degree_distribution(G : nx.DiGraph, degree_type : str, \
 
     # Top N nodes by degree
     topN_nodes = dict(sorted(degree_dict.items(), key=lambda item: item[1], reverse=True)[:bestN])
-
     return degree_freq_list, topN_nodes
     # ----------------- END OF FUNCTION --------------------- #
 
@@ -131,7 +148,7 @@ def deletion_impact(G : nx.Graph, node_list : list,\
         average distance as values.
     '''
     # ------- IMPLEMENT HERE THE BODY OF THE FUNCTION ------- #
-    original_avg_distance = average_distance(G, iterations)
+    original_avg_distance = average_distance(G, iterations) # utilitzar el de netx
 
     results = {}
     groupings = list(combinations(node_list, grouping_size))
@@ -157,11 +174,19 @@ if __name__ == "__main__":
     G = nx.read_graphml(graph_file)
 
     print(f"Graph has: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
+    degree_dist, top_nodes = degree_distribution(G, degree_type="in", node_type="all", bestN=10)
+    print("\nTop 5 nodes by in-degree:")
 
-    degree_dist, top_tf_nodes = degree_distribution(G, degree_type="out", node_type="TF", bestN=5)
-    print("\nTop 5 TFs by out-degree:")
-    for node, degree in top_tf_nodes.items():
+    for node, degree in top_nodes.items():
         print(f"  {node}: {degree}")
+
+
+    plot_degree_distribution(degree_dist, title_prefix="in-degree Distribution for TFs")
+
+    #in_degrees = list(dict(G.out_degree([n for n, attr in G.nodes(data=True) if attr.get('ntype') == 'TF'])).values())
+    in_degrees = list(dict(G.in_degree()).values())
+    mean_degree = np.mean(in_degrees)
+    print("mean degree:", mean_degree)
 
     UG = G.to_undirected()
     LCC = largest_CC_graph(UG)
@@ -175,7 +200,7 @@ if __name__ == "__main__":
     tf_nodes = [n for n, attr in G.nodes(data=True) if attr.get('ntype') == 'TF']
     impact_dict = deletion_impact(UG, tf_nodes, grouping_size=1, iterations=300)
 
-    print("\nImpact of removing TFs individually (top 5 by increase in avg dist):")
+    print("\nImpact of removing TFs individually (top 5):")
     for group, impact in sorted(impact_dict.items(), key=lambda x: -x[1])[:5]:
         print(f"  {group}: Δ = {impact:.4f}")
     # ------------------- END OF MAIN ------------------------ #
