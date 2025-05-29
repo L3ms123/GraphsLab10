@@ -376,9 +376,6 @@ if __name__ == "__main__":
     tf_riset_path = os.path.join(base_dir, "data", "TF-RISet.tsv")
     tf_set_path = os.path.join(base_dir, "data", "TFSet.tsv")
     EColi = SeqIO.read(gb_path, "genbank")
-    if "Ecoli_TRN.graphml" in os.listdir(os.path.join(base_dir, "output_graphs")):
-        print("Graph files already exist. Exiting to avoid overwriting.")
-        sys.exit(0)
     Ecoli_TRN = TF_RISet_parse(tf_riset_path, \
                               tf_set_path, \
                               detect_operons=False, \
@@ -402,7 +399,24 @@ if __name__ == "__main__":
 
     tf1, tg1, total1, involved1, frac1 = analyze_graph(Ecoli_TRN, EColi)
     tf2, tg2, total2, involved2, frac2 = analyze_graph(Ecoli_operon_TRN, EColi)
+    print('TRANSCRIPTION REGULATORY NETWORK ANALYSIS')
+    print('--------------- Ecoli TRN Analysis --------------')
+    print(f"Number of TFs: {tf1}, Number of TGs: {tg1}")
+    print(f"Total genes: {total1}, Involved genes: {involved1}")
+    print(f"Fraction of genes involved in TRN: {frac1:.2f}")
 
+    print('------------- Ecoli operon TRN Analysis ----------')
+    print(f"Number of TFs: {tf2}, Number of TGs: {tg2}")
+    print(f"Total genes: {total2}, Involved genes: {involved2}")
+    print(f"Fraction of genes involved in operon TRN: {frac2:.2f}")
+
+    print('----------------- MAX DEGREES --------------------')
     in1, out1 = max_degrees(Ecoli_TRN)
     in2, out2 = max_degrees(Ecoli_operon_TRN)
-    print
+    in_name1 = Ecoli_TRN.nodes[in1[0]].get("name", "unknown")
+    out_name1 = Ecoli_TRN.nodes[out1[0]].get("name", "unknown")
+    in_name2 = Ecoli_operon_TRN.nodes[in2[0]].get("name", "unknown")
+    out_name2 = Ecoli_operon_TRN.nodes[out2[0]].get("name", "unknown")
+    print(f"Ecoli TRN: Max in-degree node: {in_name1} ({in1[0]}) = {in1[1]}, Max out-degree node: {out_name2} ({out1[0]}) = {out1[1]}")
+    print(f"Ecoli operon TRN: Max in-degree node: {in_name2} ({in2[0]}) = {in2[1]}, Max out-degree node: {out_name2} ({out2[0]}) = {out2[1]}")
+    print('--------------------------------------------------')
