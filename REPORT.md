@@ -1,5 +1,6 @@
 # REPORT
 
+## PART 1
 ### 1. (0.5 points) Report on the order and size of both networks. Explain why these numbers may be different from the number of rows in the TF-RISet file. 
 #### Order and Size:
 - Without operons:
@@ -39,3 +40,20 @@ The most regulated and most regulatory genes are the same in both networks, this
 - With operons, nac appears to regulate more genes, so it remains the node with the highest out-degree.
 - The most targeted gene, csgD, stays the same because operon expansion doesn’t add new TFs regulating it,  it only increases the number of targets each TF regulates.
 
+
+
+
+## PART 4
+### Visualization Design in Gephi:
+- Layout algorithm: Yifan Hu for spatial separation of dense hubs and peripheral nodes.
+- Node size:scale by out-degree → larger nodes = more regulatory influence.
+- Node color:
+    - Color by ntype: Red for TFs, blue for TGs and yellow for autoregulatry TFs (separate regulators from targets).
+- Edge width: edges had not weight here so we just display them gray.
+- Labeling: Display of labels for top 10 nodes by out-degree (locus tag).
+
+### Network Characteristics Conveyed:
+- Hierarchy: Layout and node size show central TFs.
+- Modularity: Local clusters can reveal functionally co-regulated genes.
+- Regulatory influence: Out-degree highlights global vs. local regulators.
+- Vulnerability: Central nodes represent points of control.

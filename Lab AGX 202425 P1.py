@@ -114,6 +114,7 @@ def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
     '''
     
     # Find the starting gene by locus_tag
+    # Si iterara sobre qualifiers, no tendria acceso a la informacion del feature, posicion, índice, y no podria devolver idx
     start_gene = None
     for feature in genome.features:
         if feature.type == 'gene':
@@ -187,52 +188,13 @@ def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
             else:
                 break
     
-    # Extend operon in the backward direction 
-    if start_strand == 1:  # Forward strand genes
-        current_idx = start_idx
-        while current_idx - 1 >= 0:
-            prev_gene = all_genes[current_idx - 1]
-            # Check if previous gene is on the same strand
-            if prev_gene.location.strand != start_strand:
-                break
-            
-            # Calculate intergenic distance
-            current_gene = all_genes[current_idx]
-            dist = intergenic_distance(prev_gene, current_gene, start_strand)
-            
-            # Check if distance is within threshold
-            if dist <= max_intergenic_dist:
-                operon_genes.insert(0, prev_gene)  # Insert at beginning
-                current_idx -= 1
-            else:
-                break
-    
-    else:  # Reverse strand genes 
-        current_idx = start_idx
-        while current_idx + 1 < len(all_genes):
-            next_gene = all_genes[current_idx + 1]
-            # Check if next gene is on the same strand
-            if next_gene.location.strand != start_strand:
-                break
-            
-            # Calculate intergenic distance
-            current_gene = all_genes[current_idx]
-            dist = intergenic_distance(next_gene, current_gene, start_strand)
-            
-            # Check if distance is within threshold
-            if dist <= max_intergenic_dist:
-                operon_genes.append(next_gene)
-                current_idx += 1
-            else:
-                break
-    
     # Extract locus_tags
     locus_tags = []
     for gene in operon_genes:
         if 'locus_tag' in gene.qualifiers:
             locus_tags.append(gene.qualifiers['locus_tag'][0])
     
-    # Remove duplicates
+    # Remove duplicate
     seen = set()
     unique_locus_tags = []
     for tag in locus_tags:
