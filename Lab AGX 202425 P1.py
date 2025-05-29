@@ -19,6 +19,33 @@ import matplotlib.pyplot as plt
 
 # ------- IMPLEMENT HERE ANY AUXILIARY FUNCTIONS NEEDED ------- #
 
+# Helper function to calculate intergenic distance
+def intergenic_distance(gene1, gene2, strand):
+    if strand == 1:  # Forward strand
+        # Distance from end of gene1 to start of gene2
+        return gene2.location.start - gene1.location.end
+    else:  # Reverse strand (strand == -1)
+        # Distance from end of gene2 to start of gene1 (since we're going backwards)
+        return gene1.location.start - gene2.location.end
+    
+
+def analyze_graph(G, genome):
+    TFs = [n for n, d in G.nodes(data=True) if d.get("ntype") == "TF"]
+    TGs = [n for n, d in G.nodes(data=True) if d.get("ntype") == "TG"]
+
+    num_TFs = len(TFs)
+    num_TGs = len(set(TGs))  # avoid duplicates
+    total_genes = sum(1 for f in genome.features if f.type == "gene")
+    involved_genes = len(set(TFs + TGs))
+    fraction_involved = involved_genes / total_genes
+
+    return num_TFs, num_TGs, total_genes, involved_genes, fraction_involved
+
+def max_degrees(G):
+    in_deg_node = max(G.in_degree(), key=lambda x: x[1])
+    out_deg_node = max(G.out_degree(), key=lambda x: x[1])
+    return in_deg_node, out_deg_node
+
 # --------------- END OF AUXILIARY FUNCTIONS ------------------ #
 
 def feature_list(genome : SeqRecord, query : str) -> list:
@@ -77,88 +104,145 @@ def gene_qualifier(query : str, query_field : str,
                 return idx, ''
     return -1, ''
 
-    
 
-
-def operon(locus_tag : str, max_intergenic_dist : int, genome : SeqRecord) -> list:
+def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
     '''
     Obtain the locus_tag identifier for a given gene name
-    - param: locus_tag : str
-        locus_tag of lead operon gene
-    - param: max_intergenic_dist : int
-        maximum distance between consecutive, same strand genes
-    - param: genome : SeqRecord
-        genome SeqRecord object for operon inference
-    - return: list
-        list of locus_tags conforming operon (including query)
+    - param: locus_tag : str locus_tag of lead operon gene
+    - param: max_intergenic_dist : int maximum distance between consecutive, same strand genes
+    - param: genome : SeqRecord genome SeqRecord object for operon inference
+    - return: list list of locus_tags conforming operon (including query)
     '''
-    # Filter genes with locus_tag
-    gene_features = [
-        f for f in genome.features 
-        if f.type == "gene" and "locus_tag" in f.qualifiers
-    ]
     
-    # Find the initial gene and its strand
-    initial_gene = None
-    for f in gene_features:
-        if f.qualifiers["locus_tag"][0] == locus_tag:
-            initial_gene = f
+    # Find the starting gene by locus_tag
+    start_gene = None
+    for feature in genome.features:
+        if feature.type == 'gene' or feature.type == 'CDS':
+            if 'locus_tag' in feature.qualifiers:
+                if feature.qualifiers['locus_tag'][0] == locus_tag:
+                    start_gene = feature
+                    break
+    
+    if start_gene is None:
+        return []  # Gene not found
+    
+    # Get all genes/CDS features and sort by position
+    all_genes = []
+    for feature in genome.features:
+        if feature.type == 'gene' or feature.type == 'CDS':
+            if 'locus_tag' in feature.qualifiers:
+                all_genes.append(feature)
+    
+    # Sort genes by start position
+    all_genes.sort(key=lambda x: x.location.start)
+    
+    # Find the index of our starting gene
+    start_idx = None
+    for i, gene in enumerate(all_genes):
+        if gene.qualifiers['locus_tag'][0] == locus_tag:
+            start_idx = i
             break
-    if not initial_gene:
+    
+    if start_idx is None:
         return []
-    strand = initial_gene.location.strand
-
-    # Sort all genes by start position
-    gene_features.sort(key=lambda f: f.location.start)
-
-    # Find the index of the initial gene after sorting
-    try:
-        idx_initial = gene_features.index(initial_gene)
-    except ValueError:
-        return []
-
-    operon_genes = [locus_tag]
-
-    # Detect upstream genes (reverse iteration)
-    current_idx = idx_initial - 1
-    while current_idx >= 0:
-        prev_gene = gene_features[current_idx]
-        if prev_gene.location.strand != strand:
-            break
-        # Calculate distance to previous gene
-        curr_end = gene_features[current_idx + 1].location.start
-        prev_end = prev_gene.location.end
-        distance = abs(curr_end - prev_end)
-        if distance <= max_intergenic_dist:
-            operon_genes.insert(0, prev_gene.qualifiers["locus_tag"][0])
-            current_idx -= 1
-        else:
-            break
-
-    # Detect downstream genes (forward iteration)
-    current_idx = idx_initial + 1
-    while current_idx < len(gene_features):
-        next_gene = gene_features[current_idx]
-        if next_gene.location.strand != strand:
-            break
-        # Calculate distance to next gene
-        curr_end = gene_features[current_idx - 1].location.end
-        next_start = next_gene.location.start
-        distance = abs(next_start - curr_end)
-        if distance <= max_intergenic_dist:
-            operon_genes.append(next_gene.qualifiers["locus_tag"][0])
-            current_idx += 1
-        else:
-            break
-
-    # Reverse order for reverse strand to maintain transcription direction
-    if strand == -1:
-        operon_genes = operon_genes[::-1]
-
-    return operon_genes
-
-
-   
+    
+    operon_genes = [start_gene]
+    start_strand = start_gene.location.strand
+    
+    
+    # Extend operon in the forward direction (increasing genomic positions)
+    if start_strand == 1:  # Forward strand genes
+        current_idx = start_idx
+        while current_idx + 1 < len(all_genes):
+            next_gene = all_genes[current_idx + 1]
+            # Check if next gene is on the same strand
+            if next_gene.location.strand != start_strand:
+                break
+            
+            # Calculate intergenic distance
+            current_gene = all_genes[current_idx]
+            dist = intergenic_distance(current_gene, next_gene, start_strand)
+            
+            # Check if distance is within threshold
+            if dist <= max_intergenic_dist:
+                operon_genes.append(next_gene)
+                current_idx += 1
+            else:
+                break
+    
+    else:  # Reverse strand genes (strand == -1)
+        current_idx = start_idx
+        while current_idx - 1 >= 0:
+            prev_gene = all_genes[current_idx - 1]
+            # Check if previous gene is on the same strand
+            if prev_gene.location.strand != start_strand:
+                break
+            
+            # Calculate intergenic distance
+            current_gene = all_genes[current_idx]
+            dist = intergenic_distance(current_gene, prev_gene, start_strand)
+            
+            # Check if distance is within threshold
+            if dist <= max_intergenic_dist:
+                operon_genes.insert(0, prev_gene)  # Insert at beginning to maintain order
+                current_idx -= 1
+            else:
+                break
+    
+    # Extend operon in the backward direction from starting gene
+    if start_strand == 1:  # Forward strand genes
+        current_idx = start_idx
+        while current_idx - 1 >= 0:
+            prev_gene = all_genes[current_idx - 1]
+            # Check if previous gene is on the same strand
+            if prev_gene.location.strand != start_strand:
+                break
+            
+            # Calculate intergenic distance
+            current_gene = all_genes[current_idx]
+            dist = intergenic_distance(prev_gene, current_gene, start_strand)
+            
+            # Check if distance is within threshold
+            if dist <= max_intergenic_dist:
+                operon_genes.insert(0, prev_gene)  # Insert at beginning
+                current_idx -= 1
+            else:
+                break
+    
+    else:  # Reverse strand genes (strand == -1)
+        current_idx = start_idx
+        while current_idx + 1 < len(all_genes):
+            next_gene = all_genes[current_idx + 1]
+            # Check if next gene is on the same strand
+            if next_gene.location.strand != start_strand:
+                break
+            
+            # Calculate intergenic distance
+            current_gene = all_genes[current_idx]
+            dist = intergenic_distance(next_gene, current_gene, start_strand)
+            
+            # Check if distance is within threshold
+            if dist <= max_intergenic_dist:
+                operon_genes.append(next_gene)
+                current_idx += 1
+            else:
+                break
+    
+    # Extract locus_tags from the operon genes
+    locus_tags = []
+    for gene in operon_genes:
+        if 'locus_tag' in gene.qualifiers:
+            locus_tags.append(gene.qualifiers['locus_tag'][0])
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_locus_tags = []
+    for tag in locus_tags:
+        if tag not in seen:
+            seen.add(tag)
+            unique_locus_tags.append(tag)
+    
+    return unique_locus_tags
 
 
 
@@ -186,8 +270,7 @@ def TF_RISet_parse(tf_riset_filename: str, tf_set_filename: str,
     - param: genome : SeqRecord
         genome SeqRecord object to extract information from
     - return: TF dictionary
-    """
-
+    """    
     locus_to_name = {}
     name_to_locus = {}
     for feat in genome.features:
@@ -210,7 +293,7 @@ def TF_RISet_parse(tf_riset_filename: str, tf_set_filename: str,
             gene_name = cols[3].strip()
             locus_tag = cols[4].strip() or name_to_locus.get(gene_name, "")
             if not locus_tag and gene_name in name_to_locus:
-                locus_tag = name_to_locus[tf_gene_name]
+                locus_tag = name_to_locus[gene_name]
             TF_dict[tf_name] = (gene_name, locus_tag)
 
     G = nx.DiGraph()
@@ -258,14 +341,16 @@ def TF_RISet_parse(tf_riset_filename: str, tf_set_filename: str,
 
             if not tg_ids:
                 skipped_tg += 1
-                print(f"[SKIPPED TG] No se resolvió tg_id para: '{tg_gene_name}'")
-                print(f" - Línea original: {cols}")
-                print(f" - TF: {tf_name}, TF_gene_name: {tf_gene_name}, TF_id: {tf_id}")
+                # print(f"[SKIPPED TG] No se resolvió tg_id para: '{tg_gene_name}'")
+                # print(f" - Línea original: {cols}")
+                # print(f" - TF: {tf_name}, TF_gene_name: {tf_gene_name}, TF_id: {tf_id}")
                 continue
 
-            for tg_id, tg_name in tg_ids:
-                G.add_node(tg_id, ntype="TG", name=locus_to_name.get(tg_id, tg_name))
+            for tg_id, tg_name in tg_ids: 
+                if tg_id not in G:
+                    G.add_node(tg_id, ntype="TG", name=locus_to_name.get(tg_id, tg_name))
                 G.add_edge(tf_id, tg_id)
+
 
                 if detect_operons and tg_id in locus_to_name:
                     try:
@@ -274,7 +359,8 @@ def TF_RISet_parse(tf_riset_filename: str, tf_set_filename: str,
                             if op_gene == tg_id:
                                 continue
                             op_name = locus_to_name.get(op_gene, op_gene)
-                            G.add_node(op_gene, ntype="TG", name=op_name)
+                            if op_gene not in G:
+                                G.add_node(op_gene, ntype="TG", name=op_name)
                             G.add_edge(tf_id, op_gene)
                     except Exception as e:
                         print(f"Operon detection failed for {tg_id}: {e}")
@@ -287,10 +373,12 @@ if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
     gb_path = os.path.join(base_dir, "data", "U00096.3.gb")
-    tf_riset_path = os.path.join(base_dir, "data", "miniTF-RISet.tsv")
+    tf_riset_path = os.path.join(base_dir, "data", "TF-RISet.tsv")
     tf_set_path = os.path.join(base_dir, "data", "TFSet.tsv")
     EColi = SeqIO.read(gb_path, "genbank")
-
+    if "Ecoli_TRN.graphml" in os.listdir(os.path.join(base_dir, "output_graphs")):
+        print("Graph files already exist. Exiting to avoid overwriting.")
+        sys.exit(0)
     Ecoli_TRN = TF_RISet_parse(tf_riset_path, \
                               tf_set_path, \
                               detect_operons=False, \
@@ -303,8 +391,18 @@ if __name__ == "__main__":
                               max_intergenic_dist=100, \
                               genome=EColi)
     
-    
-    nx.write_graphml(Ecoli_TRN, "Ecoli_TRN.graphml")
-    nx.write_graphml(Ecoli_operon_TRN, "Ecoli_operon_TRN.graphml")  
-    nx.draw(Ecoli_operon_TRN, with_labels=True, node_size=300, node_color="lightblue")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(script_dir, "output_graphs")
+
+    nx.write_graphml(Ecoli_TRN, os.path.join(output_dir, "Ecoli_TRN.graphml"))
+    nx.write_graphml(Ecoli_operon_TRN, os.path.join(output_dir, "Ecoli_operon_TRN.graphml")) 
+
+    nx.draw(Ecoli_TRN, with_labels=True, node_size=300, node_color="lightblue")
     plt.show()
+
+    tf1, tg1, total1, involved1, frac1 = analyze_graph(Ecoli_TRN, EColi)
+    tf2, tg2, total2, involved2, frac2 = analyze_graph(Ecoli_operon_TRN, EColi)
+
+    in1, out1 = max_degrees(Ecoli_TRN)
+    in2, out2 = max_degrees(Ecoli_operon_TRN)
+    print
