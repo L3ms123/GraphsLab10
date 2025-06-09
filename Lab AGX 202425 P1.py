@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 
 # ------- IMPLEMENT HERE ANY AUXILIARY FUNCTIONS NEEDED ------- #
 
-# Helper function to calculate intergenic distance
 def intergenic_distance(gene1, gene2, strand):
     if strand == 1:  # Forward strand
         # Distance from end of gene1 to start of gene2
@@ -117,26 +116,26 @@ def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
     # Find the starting gene by locus_tag
     start_gene = None
     for feature in genome.features:
-        if feature.type == 'gene' or feature.type == 'CDS':
+        if feature.type == 'gene':
             if 'locus_tag' in feature.qualifiers:
                 if feature.qualifiers['locus_tag'][0] == locus_tag:
                     start_gene = feature
                     break
     
     if start_gene is None:
-        return []  # Gene not found
+        return []  
     
-    # Get all genes/CDS features and sort by position
+    # Get all genes sorted by position
     all_genes = []
     for feature in genome.features:
-        if feature.type == 'gene' or feature.type == 'CDS':
+        if feature.type == 'gene':
             if 'locus_tag' in feature.qualifiers:
                 all_genes.append(feature)
     
-    # Sort genes by start position
+    # Sort by start position
     all_genes.sort(key=lambda x: x.location.start)
     
-    # Find the index of our starting gene
+    # Find the index starting gene
     start_idx = None
     for i, gene in enumerate(all_genes):
         if gene.qualifiers['locus_tag'][0] == locus_tag:
@@ -149,8 +148,7 @@ def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
     operon_genes = [start_gene]
     start_strand = start_gene.location.strand
     
-    
-    # Extend operon in the forward direction (increasing genomic positions)
+    # Extend operon in the forward direction 
     if start_strand == 1:  # Forward strand genes
         current_idx = start_idx
         while current_idx + 1 < len(all_genes):
@@ -170,7 +168,7 @@ def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
             else:
                 break
     
-    else:  # Reverse strand genes (strand == -1)
+    else:  # Reverse strand genes
         current_idx = start_idx
         while current_idx - 1 >= 0:
             prev_gene = all_genes[current_idx - 1]
@@ -189,7 +187,7 @@ def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
             else:
                 break
     
-    # Extend operon in the backward direction from starting gene
+    # Extend operon in the backward direction 
     if start_strand == 1:  # Forward strand genes
         current_idx = start_idx
         while current_idx - 1 >= 0:
@@ -209,7 +207,7 @@ def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
             else:
                 break
     
-    else:  # Reverse strand genes (strand == -1)
+    else:  # Reverse strand genes 
         current_idx = start_idx
         while current_idx + 1 < len(all_genes):
             next_gene = all_genes[current_idx + 1]
@@ -228,13 +226,13 @@ def operon(locus_tag: str, max_intergenic_dist: int, genome: SeqRecord) -> list:
             else:
                 break
     
-    # Extract locus_tags from the operon genes
+    # Extract locus_tags
     locus_tags = []
     for gene in operon_genes:
         if 'locus_tag' in gene.qualifiers:
             locus_tags.append(gene.qualifiers['locus_tag'][0])
     
-    # Remove duplicates while preserving order
+    # Remove duplicates
     seen = set()
     unique_locus_tags = []
     for tag in locus_tags:
@@ -281,7 +279,7 @@ def TF_RISet_parse(tf_riset_filename: str, tf_set_filename: str,
         if name:
             name_to_locus[name] = locus
 
-    # Parse TFSet: no validación, guarda todo
+    # Parse TFSet: guarda todo
     TF_dict = {}
     with open(tf_set_filename, "r") as f:
         reader = csv.reader(f, delimiter='\t')
@@ -328,7 +326,7 @@ def TF_RISet_parse(tf_riset_filename: str, tf_set_filename: str,
                 if tg_id:
                     tg_ids.append((tg_id, tg_gene_name))
                 else:
-                    # Intentar descomponer en subgenes tipo "gadAX"
+                    # Intentar descomponer en subgenes  como"gadAX"
                     if len(tg_gene_name) > 4:
                         prefix = tg_gene_name[:3]
                         suffixes = tg_gene_name[3:]
@@ -376,9 +374,6 @@ if __name__ == "__main__":
     tf_riset_path = os.path.join(base_dir, "data", "TF-RISet.tsv")
     tf_set_path = os.path.join(base_dir, "data", "TFSet.tsv")
     EColi = SeqIO.read(gb_path, "genbank")
-    if "Ecoli_TRN.graphml" in os.listdir(os.path.join(base_dir, "output_graphs")):
-        print("Graph files already exist. Exiting to avoid overwriting.")
-        sys.exit(0)
     Ecoli_TRN = TF_RISet_parse(tf_riset_path, \
                               tf_set_path, \
                               detect_operons=False, \
@@ -397,12 +392,29 @@ if __name__ == "__main__":
     nx.write_graphml(Ecoli_TRN, os.path.join(output_dir, "Ecoli_TRN.graphml"))
     nx.write_graphml(Ecoli_operon_TRN, os.path.join(output_dir, "Ecoli_operon_TRN.graphml")) 
 
-    nx.draw(Ecoli_TRN, with_labels=True, node_size=300, node_color="lightblue")
+    nx.draw(Ecoli_operon_TRN, with_labels=True, node_size=300, node_color="lightblue")
     plt.show()
 
     tf1, tg1, total1, involved1, frac1 = analyze_graph(Ecoli_TRN, EColi)
     tf2, tg2, total2, involved2, frac2 = analyze_graph(Ecoli_operon_TRN, EColi)
+    print('TRANSCRIPTION REGULATORY NETWORK ANALYSIS')
+    print('--------------- Ecoli TRN Analysis --------------')
+    print(f"Number of TFs: {tf1}, Number of TGs: {tg1}")
+    print(f"Total genes: {total1}, Involved genes: {involved1}")
+    print(f"Fraction of genes involved in TRN: {frac1:.2f}")
 
+    print('------------- Ecoli operon TRN Analysis ----------')
+    print(f"Number of TFs: {tf2}, Number of TGs: {tg2}")
+    print(f"Total genes: {total2}, Involved genes: {involved2}")
+    print(f"Fraction of genes involved in operon TRN: {frac2:.2f}")
+
+    print('----------------- MAX DEGREES --------------------')
     in1, out1 = max_degrees(Ecoli_TRN)
     in2, out2 = max_degrees(Ecoli_operon_TRN)
-    print
+    in_name1 = Ecoli_TRN.nodes[in1[0]].get("name", "unknown")
+    out_name1 = Ecoli_TRN.nodes[out1[0]].get("name", "unknown")
+    in_name2 = Ecoli_operon_TRN.nodes[in2[0]].get("name", "unknown")
+    out_name2 = Ecoli_operon_TRN.nodes[out2[0]].get("name", "unknown")
+    print(f"Ecoli TRN: Max in-degree node: {in_name1} ({in1[0]}) = {in1[1]}, Max out-degree node: {out_name2} ({out1[0]}) = {out1[1]}")
+    print(f"Ecoli operon TRN: Max in-degree node: {in_name2} ({in2[0]}) = {in2[1]}, Max out-degree node: {out_name2} ({out2[0]}) = {out2[1]}")
+    print('--------------------------------------------------')

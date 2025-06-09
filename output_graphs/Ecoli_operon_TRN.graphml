@@ -2617,6 +2617,14 @@
   <data key="d0">TG</data>
   <data key="d1">flhD</data>
 </node>
+<node id="b1887">
+  <data key="d0">TG</data>
+  <data key="d1">cheW</data>
+</node>
+<node id="b1888">
+  <data key="d0">TG</data>
+  <data key="d1">cheA</data>
+</node>
 <node id="b1889">
   <data key="d0">TG</data>
   <data key="d1">motB</data>
@@ -6889,14 +6897,6 @@
   <data key="d0">TG</data>
   <data key="d1">cfa</data>
 </node>
-<node id="b1888">
-  <data key="d0">TG</data>
-  <data key="d1">cheA</data>
-</node>
-<node id="b1887">
-  <data key="d0">TG</data>
-  <data key="d1">cheW</data>
-</node>
 <node id="b1741">
   <data key="d0">TG</data>
   <data key="d1">cho</data>
@@ -7573,6 +7573,10 @@
   <data key="d0">TG</data>
   <data key="d1">nusA</data>
 </node>
+<node id="b3168">
+  <data key="d0">TG</data>
+  <data key="d1">infB</data>
+</node>
 <node id="b3170">
   <data key="d0">TG</data>
   <data key="d1">rimP</data>
@@ -7992,6 +7996,10 @@
 <node id="b3631">
   <data key="d0">TG</data>
   <data key="d1">waaG</data>
+</node>
+<node id="b4795">
+  <data key="d0">TG</data>
+  <data key="d1">yibX</data>
 </node>
 <node id="b4796">
   <data key="d0">TG</data>
@@ -10440,10 +10448,6 @@
 <node id="b3925">
   <data key="d0">TG</data>
   <data key="d1">glpX</data>
-</node>
-<node id="b3168">
-  <data key="d0">TG</data>
-  <data key="d1">infB</data>
 </node>
 <node id="b3167">
   <data key="d0">TG</data>
@@ -13396,6 +13400,8 @@
 <edge source="b3357" target="b2800"/>
 <edge source="b3357" target="b2799"/>
 <edge source="b3357" target="b1892"/>
+<edge source="b3357" target="b1887"/>
+<edge source="b3357" target="b1888"/>
 <edge source="b3357" target="b1889"/>
 <edge source="b3357" target="b1890"/>
 <edge source="b3357" target="b4828"/>
@@ -15040,8 +15046,8 @@
 <edge source="b3261" target="b2287"/>
 <edge source="b3261" target="b3171"/>
 <edge source="b3261" target="b3169"/>
-<edge source="b3261" target="b3170"/>
 <edge source="b3261" target="b3168"/>
+<edge source="b3261" target="b3170"/>
 <edge source="b3261" target="b3167"/>
 <edge source="b3261" target="b3166"/>
 <edge source="b3261" target="b3165"/>
@@ -15626,6 +15632,8 @@
 <edge source="b1921" target="b3508"/>
 <edge source="b1921" target="b3509"/>
 <edge source="b1921" target="b1892"/>
+<edge source="b1921" target="b1887"/>
+<edge source="b1921" target="b1888"/>
 <edge source="b1921" target="b1889"/>
 <edge source="b1921" target="b1890"/>
 <edge source="b1921" target="b4828"/>
@@ -15826,6 +15834,8 @@
 <edge source="b1712;b0912" target="b3161"/>
 <edge source="b1712;b0912" target="b3908"/>
 <edge source="b1712;b0912" target="b1892"/>
+<edge source="b1712;b0912" target="b1887"/>
+<edge source="b1712;b0912" target="b1888"/>
 <edge source="b1712;b0912" target="b1889"/>
 <edge source="b1712;b0912" target="b1890"/>
 <edge source="b1712;b0912" target="b4828"/>
@@ -16030,6 +16040,8 @@
 <edge source="b0683" target="b0588"/>
 <edge source="b0683" target="b0589"/>
 <edge source="b0683" target="b1892"/>
+<edge source="b0683" target="b1887"/>
+<edge source="b0683" target="b1888"/>
 <edge source="b0683" target="b1889"/>
 <edge source="b0683" target="b1890"/>
 <edge source="b0683" target="b4828"/>
@@ -16473,6 +16485,8 @@
 <edge source="b1237" target="b3322"/>
 <edge source="b1237" target="b4117"/>
 <edge source="b1237" target="b1892"/>
+<edge source="b1237" target="b1887"/>
+<edge source="b1237" target="b1888"/>
 <edge source="b1237" target="b1889"/>
 <edge source="b1237" target="b1890"/>
 <edge source="b1237" target="b4828"/>
@@ -17378,6 +17392,8 @@
 <edge source="b4480" target="b3212"/>
 <edge source="b4480" target="b3213"/>
 <edge source="b4480" target="b1892"/>
+<edge source="b4480" target="b1887"/>
+<edge source="b4480" target="b1888"/>
 <edge source="b4480" target="b1889"/>
 <edge source="b4480" target="b1890"/>
 <edge source="b4480" target="b4828"/>
@@ -17772,6 +17788,11 @@
 <edge source="b1988" target="b1661"/>
 <edge source="b1988" target="b1888"/>
 <edge source="b1988" target="b1887"/>
+<edge source="b1988" target="b1889"/>
+<edge source="b1988" target="b1890"/>
+<edge source="b1988" target="b4828"/>
+<edge source="b1988" target="b1891"/>
+<edge source="b1988" target="b1892"/>
 <edge source="b1988" target="b1741"/>
 <edge source="b1988" target="b4224"/>
 <edge source="b1988" target="b4225"/>
@@ -18079,6 +18100,7 @@
 <edge source="b1988" target="b2393"/>
 <edge source="b1988" target="b2394"/>
 <edge source="b1988" target="b3169"/>
+<edge source="b1988" target="b3168"/>
 <edge source="b1988" target="b3170"/>
 <edge source="b1988" target="b0416"/>
 <edge source="b1988" target="b0413"/>
@@ -18252,6 +18274,7 @@
 <edge source="b1988" target="b3621"/>
 <edge source="b1988" target="b3622"/>
 <edge source="b1988" target="b3631"/>
+<edge source="b1988" target="b4795"/>
 <edge source="b1988" target="b4796"/>
 <edge source="b1988" target="b3623"/>
 <edge source="b1988" target="b3624"/>
@@ -18617,6 +18640,8 @@
 <edge source="b4327" target="b4292"/>
 <edge source="b4327" target="b4293"/>
 <edge source="b0294" target="b1892"/>
+<edge source="b0294" target="b1887"/>
+<edge source="b0294" target="b1888"/>
 <edge source="b0294" target="b1889"/>
 <edge source="b0294" target="b1890"/>
 <edge source="b0294" target="b4828"/>
@@ -19051,6 +19076,8 @@
 <edge source="b3025" target="b3700"/>
 <edge source="b3025" target="b3701"/>
 <edge source="b3025" target="b1892"/>
+<edge source="b3025" target="b1887"/>
+<edge source="b3025" target="b1888"/>
 <edge source="b3025" target="b1889"/>
 <edge source="b3025" target="b1890"/>
 <edge source="b3025" target="b4828"/>
@@ -19100,6 +19127,8 @@
 <edge source="b0464" target="b4063"/>
 <edge source="b0464" target="b4062"/>
 <edge source="b0464" target="b1892"/>
+<edge source="b0464" target="b1887"/>
+<edge source="b0464" target="b1888"/>
 <edge source="b0464" target="b1889"/>
 <edge source="b0464" target="b1890"/>
 <edge source="b0464" target="b4828"/>
@@ -19172,6 +19201,8 @@
 <edge source="b3405" target="b0553"/>
 <edge source="b3405" target="b0552"/>
 <edge source="b3405" target="b1892"/>
+<edge source="b3405" target="b1887"/>
+<edge source="b3405" target="b1888"/>
 <edge source="b3405" target="b1889"/>
 <edge source="b3405" target="b1890"/>
 <edge source="b3405" target="b4828"/>
@@ -19225,6 +19256,8 @@
 <edge source="b4365" target="b4523"/>
 <edge source="b4365" target="b0987"/>
 <edge source="b4365" target="b1892"/>
+<edge source="b4365" target="b1887"/>
+<edge source="b4365" target="b1888"/>
 <edge source="b4365" target="b1889"/>
 <edge source="b4365" target="b1890"/>
 <edge source="b4365" target="b4828"/>
@@ -19397,6 +19430,8 @@
 <edge source="b2289" target="b0076"/>
 <edge source="b2289" target="b4313"/>
 <edge source="b2289" target="b1892"/>
+<edge source="b2289" target="b1887"/>
+<edge source="b2289" target="b1888"/>
 <edge source="b2289" target="b1889"/>
 <edge source="b2289" target="b1890"/>
 <edge source="b2289" target="b4828"/>
@@ -20123,6 +20158,8 @@
 <edge source="b2217;b1951" target="b1039"/>
 <edge source="b2217;b1951" target="b4026"/>
 <edge source="b2217;b1951" target="b1892"/>
+<edge source="b2217;b1951" target="b1887"/>
+<edge source="b2217;b1951" target="b1888"/>
 <edge source="b2217;b1951" target="b1889"/>
 <edge source="b2217;b1951" target="b1890"/>
 <edge source="b2217;b1951" target="b4828"/>
@@ -20448,6 +20485,7 @@
 <edge source="b3585" target="b3587"/>
 <edge source="b3585" target="b3586"/>
 <edge source="b3585" target="b3630"/>
+<edge source="b3585" target="b4795"/>
 <edge source="b3585" target="b4796"/>
 <edge source="b3585" target="b3623"/>
 <edge source="b3585" target="b3624"/>
