@@ -43,7 +43,7 @@ def degree_distribution(G : nx.DiGraph, degree_type : str, \
     - param: degree_type : str
         Type of degree to compute ('in', 'out', 'general')
     - param: node_type : str
-        Type of nodes on which we report degrees ('TG', 'TG', 'all')
+        Type of nodes on which we report degrees ('TF', 'TG', 'all')
 
     - return: list
         list with degree frequency distribution
@@ -170,11 +170,11 @@ if __name__ == "__main__":
     # ------- IMPLEMENT HERE THE MAIN FOR THIS SESSION ------- #
 
     print("Loading graph...")
-    graph_file = "./output_graphs/Ecoli_operon_TRN.graphml"
+    graph_file = "./output_graphs/Ecoli_TRN.graphml"
     G = nx.read_graphml(graph_file)
 
     print(f"Graph has: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
-    degree_dist, top_nodes = degree_distribution(G, degree_type="in", node_type="all", bestN=10)
+    degree_dist, top_nodes = degree_distribution(G, degree_type="out", node_type="all", bestN=10)
     print("\nTop 5 nodes by in-degree:")
 
     for node, degree in top_nodes.items():
