@@ -148,7 +148,7 @@ def deletion_impact(G : nx.Graph, node_list : list,\
         average distance as values.
     '''
     # ------- IMPLEMENT HERE THE BODY OF THE FUNCTION ------- #
-    original_avg_distance = average_distance(G, iterations) # utilitzar el de netx
+    original_avg_distance = nx.average_shortest_path_length(G) # utilitzar el de netx
 
     results = {}
     groupings = list(combinations(node_list, grouping_size))
@@ -156,8 +156,10 @@ def deletion_impact(G : nx.Graph, node_list : list,\
     for grouping in groupings:
         G_copy = G.copy()
         G_copy.remove_nodes_from(grouping)
+        
 
-        new_avg_distance = average_distance(G_copy, iterations)
+
+        new_avg_distance = average_distance(G_copy, iterations=iterations)
         diff = new_avg_distance - original_avg_distance
         results[grouping] = diff
 
@@ -165,42 +167,77 @@ def deletion_impact(G : nx.Graph, node_list : list,\
     # ----------h-h------ END OF FUNCTION --------------------- #
 
 
+def simulate_attack(G, attack_type='random', removal_fraction=0.2):
+    H = G.copy()
+    n_removals = int(removal_fraction * len(H))
+    sizes = [len(H) / len(G)]      
+    if attack_type == 'targeted':
+        nodes_by_degree = sorted(H.degree, key=lambda x: x[1], reverse=True)
+        removal_nodes = [node for node, _ in nodes_by_degree[:n_removals]]
+    else: #when its random
+        removal_nodes = sample(list(H.nodes()), n_removals)
+    
+    batch_size = min(100, max(1, n_removals // 10))
+    for i in range(0, n_removals, batch_size):
+        batch = removal_nodes[i:i+batch_size]
+        H.remove_nodes_from(batch)
+        lcc = max(nx.connected_components(H), key=len, default=[])
+        sizes.append(len(lcc) / len(G))
+    
+    return np.linspace(0, removal_fraction, len(sizes)), sizes
 
 if __name__ == "__main__":
     # ------- IMPLEMENT HERE THE MAIN FOR THIS SESSION ------- #
-
     print("Loading graph...")
     graph_file = "./output_graphs/Ecoli_TRN.graphml"
     G = nx.read_graphml(graph_file)
-
     print(f"Graph has: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
     degree_dist, top_nodes = degree_distribution(G, degree_type="out", node_type="all", bestN=10)
-    print("\nTop 5 nodes by in-degree:")
 
-    for node, degree in top_nodes.items():
-        print(f"  {node}: {degree}")
-
-
-    plot_degree_distribution(degree_dist, title_prefix="in-degree Distribution for TFs")
-
-    #in_degrees = list(dict(G.out_degree([n for n, attr in G.nodes(data=True) if attr.get('ntype') == 'TF'])).values())
-    in_degrees = list(dict(G.in_degree()).values())
-    mean_degree = np.mean(in_degrees)
-    print("mean degree:", mean_degree)
 
     UG = G.to_undirected()
     LCC = largest_CC_graph(UG)
-    print(f"\nBiggest cc has: {LCC.number_of_nodes()} nodes, {LCC.number_of_edges()} edges")
 
-
-    avg_dist = average_distance(LCC, iterations=500)
-    print(f"\nAverage distance: {avg_dist:.4f}")
-
-
-    tf_nodes = [n for n, attr in G.nodes(data=True) if attr.get('ntype') == 'TF']
-    impact_dict = deletion_impact(UG, tf_nodes, grouping_size=1, iterations=300)
-
-    print("\nImpact of removing TFs individually (top 5):")
-    for group, impact in sorted(impact_dict.items(), key=lambda x: -x[1])[:5]:
+    
+    tf_nodes = [n for n, attr in LCC.nodes(data=True) if attr.get('ntype') == 'TF']
+    impact_dict = deletion_impact(LCC, tf_nodes, grouping_size=1, iterations=4100)
+    for group, impact in sorted(impact_dict.items(), key=lambda x: -x[1])[:30]:
         print(f"  {group}: Δ = {impact:.4f}")
+    top = [g[0] for g, _ in sorted(impact_dict.items(), key=lambda x: -x[1])[:30]]
+    print("w")
+    impact2 = deletion_impact(LCC, top, grouping_size=2, iterations=4100)
+    for group, impact in sorted(impact2.items(), key=lambda x: -x[1])[:5]:
+        print(f"  {group}: Δ = {impact:.4f}")
+
+
+    
+    n = len(LCC)
+    m = LCC.number_of_edges()
+    
+    # ER model
+    p = 2*m/(n*(n-1)) 
+    G_er = nx.fast_gnp_random_graph(n, p, seed=42)
+    
+    # BA model
+    m_ba = max(1, m // n) 
+    G_ba = nx.barabasi_albert_graph(n, m_ba, seed=42)
+    
+    # Test 
+    print("\nTesting random failure robustness...")
+    for name, graph in [('E. coli', LCC), ('ER', G_er), ('BA', G_ba)]:
+        fractions, sizes = simulate_attack(graph, 'random', 0.5)
+        final_size = sizes[-1] if sizes else 0
+        print(f"  {name}: Remaining LCC = {final_size*100:.1f}% after 50% random removal")
+    
+    print("\nTesting targeted attack vulnerability...")
+    for name, graph in [('E. coli', LCC), ('ER', G_er), ('BA', G_ba)]:
+        fractions, sizes = simulate_attack(graph, 'targeted', 0.2)
+        final_size = sizes[-1] if sizes else 0
+        print(f"  {name}: Remaining LCC = {final_size*100:.1f}% after 20% hub removal")
+    
+    print("\nAverage Path Lengths:")
+    for name, graph in [('E. coli', LCC), ('ER', G_er), ('BA', G_ba)]:
+        avg_path = nx.average_shortest_path_length(largest_CC_graph(graph))
+        
+        print(f"  {name}: {avg_path:.3f}")
     # ------------------- END OF MAIN ------------------------ #
